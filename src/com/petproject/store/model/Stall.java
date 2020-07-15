@@ -2,9 +2,10 @@ package com.petproject.store.model;
 
 import com.petproject.store.services.StorePerformanceService;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
@@ -24,24 +25,27 @@ public class Stall {
 
         servedBuyers.set(0);
         performanceService.startServeBuyers();
+
+        ExecutorService executorService = Executors.newFixedThreadPool(sellers.size());
+
         sellers.stream().forEach(seller -> {
-            seller.serveTheBuyer(buyers.poll());
+            seller.setBuyer(buyers.poll());
+            executorService.submit(seller);
             servedBuyers.incrementAndGet();
         });
-//        for (int i = 0; i < sellers.size(); i++) {
-//            final int fI = i;
-//            new Thread(() -> {
-//                sellers.get(fI).serveTheBuyer(buyers.poll());
-//                servedBuyers.incrementAndGet();
-//            }).start();
-//        }
-
+        executorService.shutdown();
         try {
-            Thread.sleep(1000);
-        } catch(InterruptedException e) {
-            System.out.println("got interrupted!");
+            executorService.awaitTermination(1000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-        log.info(performanceService.checkPerformance(servedBuyers.get()));
-    }
+
+//            try {
+//                Thread.sleep(1000);
+//            } catch (InterruptedException e) {
+//                System.out.println("got interrupted!");
+//            }
+            log.info(performanceService.checkPerformance(servedBuyers.get()));
+        }
 
 }

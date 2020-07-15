@@ -11,5 +11,4 @@ public class SellersService {
     public static void inviteSellers(List<Seller> sellers, int sellersCount) {
         sellers.addAll(Stream.generate(() -> new Seller()).limit(sellersCount).collect(Collectors.toList()));
     }
-
 }
